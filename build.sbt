@@ -5,7 +5,7 @@ lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
       organization    := "com.jask",
-      scalaVersion    := "2.12.5"
+      scalaVersion    := "2.12.6"
     )),
     name := "Northstar",
     libraryDependencies ++= Seq(
@@ -15,9 +15,12 @@ lazy val root = (project in file(".")).
       "com.typesafe.akka" %% "akka-slf4j"           % akkaVersion,
       "com.typesafe.akka" %% "akka-stream-kafka"    % "0.20",
 
+      "com.lightbend" % "kafka-streams-scala_2.12" % "0.2.1",
+
       "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion % Test,
       "com.typesafe.akka" %% "akka-testkit"         % akkaVersion     % Test,
       "com.typesafe.akka" %% "akka-stream-testkit"  % akkaVersion     % Test,
+
       "org.scalatest"     %% "scalatest"            % "3.0.1"         % Test,
 
       "ch.qos.logback"    % "logback-classic"       % "1.2.3",
