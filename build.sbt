@@ -1,14 +1,6 @@
 lazy val akkaHttpVersion = "10.1.1"
 lazy val akkaVersion    = "2.5.12"
-
-lazy val root = (project in file(".")).
-  settings(
-    inThisBuild(List(
-      organization    := "com.jask",
-      scalaVersion    := "2.12.6"
-    )),
-    name := "Northstar",
-    libraryDependencies ++= Seq(
+lazy val deps    = Seq(
       "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
@@ -28,4 +20,35 @@ lazy val root = (project in file(".")).
       "org.slf4j"         % "log4j-over-slf4j"      % "1.7.25",
       "org.slf4j"         % "jul-to-slf4j"          % "1.7.25"
     )
+
+lazy val common = (project in file("common"))
+  .settings(
+    inThisBuild(List(
+      organization    := "com.jask",
+      scalaVersion    := "2.12.6"
+    )),
+    name := "northstar-common",
+    libraryDependencies ++= deps
   )
+
+lazy val http = (project in file("http"))
+  .settings(
+    inThisBuild(List(
+      organization    := "com.jask",
+      scalaVersion    := "2.12.6"
+    )),
+    name := "northstar-http",
+    libraryDependencies ++= deps
+  )
+  .dependsOn(common)
+
+lazy val parse = (project in file("parse"))
+  .settings(
+    inThisBuild(List(
+      organization    := "com.jask",
+      scalaVersion    := "2.12.6"
+    )),
+    name := "northstar-parse",
+    libraryDependencies ++= deps
+  ) 
+  .dependsOn(common)
