@@ -25,7 +25,7 @@ object ParseService {
       props.put(ConsumerConfig.GROUP_ID_CONFIG, config.getString("kafka-consumer.group.id"))
       consumer = new KafkaConsumer[UUID, Array[Byte]](props)
 
-      new Demux(consumer, config).run()
+      new Thread(new Demux(consumer, config)).start()
     } catch {
       case e: Throwable => {
         println("Shutting down...")
