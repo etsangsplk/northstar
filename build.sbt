@@ -1,5 +1,6 @@
 lazy val akkaHttpVersion = "10.1.1"
-lazy val akkaVersion    = "2.5.12"
+lazy val akkaVersion     = "2.5.12"
+lazy val circeVersion    = "0.9.3"
 lazy val deps    = Seq(
       "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
@@ -18,7 +19,10 @@ lazy val deps    = Seq(
       "ch.qos.logback"    % "logback-classic"       % "1.2.3",
       "org.slf4j"         % "slf4j-api"             % "1.7.25",
       "org.slf4j"         % "log4j-over-slf4j"      % "1.7.25",
-      "org.slf4j"         % "jul-to-slf4j"          % "1.7.25"
+      "org.slf4j"         % "jul-to-slf4j"          % "1.7.25",
+      "io.circe" %% "circe-core"    % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser"  % circeVersion
     )
 
 lazy val common = (project in file("common"))
