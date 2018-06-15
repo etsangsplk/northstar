@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.kafka.ProducerSettings
 import akka.stream.ActorMaterializer
+import akka.stream.alpakka.s3.scaladsl.S3Client
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.ByteArraySerializer
@@ -32,8 +33,10 @@ object IngestService {
       producer = producerSettings.createKafkaProducer()
 
       val topic = config.getString("northstar.produce.topic")
+      val bucket = config.getString("northstar.produce.bucket")
+      val s3client = S3Client()
 
-      new Ingest(topic, producer, producerSettings).run()
+      new Ingest(topic, bucket, producer, producerSettings, s3client).run()
     } catch {
       case e: Throwable => {
         println("Shutting down...")
