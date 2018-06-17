@@ -4,6 +4,8 @@ import java.util.{Properties, UUID}
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
+import sun.misc.Signal
+import sun.misc.SignalHandler
 
 object ParseService {
   def main(args: Array[String]) {

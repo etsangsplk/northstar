@@ -8,21 +8,29 @@ import org.slf4j.LoggerFactory
 import java.io.{File, FileOutputStream}
 
 import scala.collection.JavaConverters._
-
+import scala.collection.mutable
 import cats.syntax.either._
-import io.circe._, io.circe.parser._
+import io.circe._
+import io.circe.parser._
+import sun.misc.{Signal, SignalHandler}
 
 class Demux(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends Runnable {
 
   private[this] lazy val log = LoggerFactory.getLogger(classOf[Demux])
+  private[this] var outputs:mutable.Map[String, FileOutputStream] = mutable.Map()
 
+  Signal.handle(new Signal("HUP"), new SignalHandler() {
+    def handle(sig: Signal) {
+      outputs = buildOutputsMap()
+    }
+  })
   /** Build and return a map of named outputs for parsing demultiplexed
     * raw records from Kafka.
     *
     * @return Map of named pipes
     */
-  def buildOutputsMap(): Map[String, FileOutputStream] = {
-    var outputsMap:Map[String, FileOutputStream] = Map()
+  def buildOutputsMap(): mutable.Map[String, FileOutputStream] = {
+    var outputsMap:mutable.Map[String, FileOutputStream] = mutable.Map()
     val d = new File(config.getString("northstar.parser.folder"))
     if (d.exists && d.isDirectory) {
       for(file <- d.listFiles.toList) {
@@ -37,7 +45,7 @@ class Demux(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends 
       }
       outputsMap
     } else {
-      Map[String, FileOutputStream]()
+      mutable.Map[String, FileOutputStream]()
     }
   }
 
@@ -47,7 +55,7 @@ class Demux(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends 
   def run(): Unit = {
     val topic = config.getString("northstar.consume.topic")
     val timeout = config.getInt("northstar.consume.timeout")
-    val outputs = buildOutputsMap()
+    outputs = buildOutputsMap()
     log.info("Worker started on topic: ".concat(topic))
     consumer.subscribe(Seq(topic).asJava)
 
@@ -56,17 +64,33 @@ class Demux(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends 
       for (record <- records) {
         val rawJson = new String(record.value, "UTF-8")
         parse(rawJson) match {
-          case Left(failure) => log.error("Skipping non-JSON record: " + rawJson)
+          case Left(failure) => {
+            log.error("Skipping non-JSON record: " + rawJson)
+          }
           case Right(json) =>  {
             val cursor: HCursor = json.hcursor
             cursor.downField("msg").downField("tag").as[String] match {
-              case Left(failure) => log.error("Skipping non-JASK JSON record: " + rawJson)
+              case Left(failure) => {
+                log.error("Skipping non-JASK JSON record: " + rawJson)
+              }
               case Right(tag) => {
                 log.info("Tag is: " + tag)
                 if (outputs.contains(tag)) {
-                  val output = outputs(tag)
-                  output.write(record.value)
-                  output.write('\n')
+                  cursor.downField("msg").downField("content").as[String]
+                  match {
+                    case Left(failure) => log.error("No content present.")
+                    case Right(content) => {
+                      try {
+                        outputs(tag).write(content.getBytes("UTF-8"))
+                        outputs(tag).write('\n')
+                      } catch {
+                        case e: Throwable => {
+                          log.error("Removing " + tag + ": ", e.getMessage)
+                          outputs -= tag
+                        }
+                      }
+                    }
+                  }
                 } else {
                   log.error("No output defined for tag: " + tag)
                 }
