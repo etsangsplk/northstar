@@ -1,6 +1,6 @@
 package io.jask.svc.northstar
 
-import java.util.{Collections, UUID}
+import java.util.UUID
 
 import com.typesafe.config.Config
 import org.apache.kafka.clients.consumer.KafkaConsumer
