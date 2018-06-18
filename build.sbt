@@ -1,6 +1,6 @@
 lazy val akkaHttpVersion = "10.1.1"
-lazy val akkaVersion = "2.5.12"
-lazy val circeVersion = "0.9.3"
+lazy val akkaVersion     = "2.5.12"
+lazy val circeVersion    = "0.9.3"
 lazy val deps    = Seq(
       "com.typesafe.akka"  %% "akka-http"              % akkaHttpVersion,
       "com.typesafe.akka"  %% "akka-stream"            % akkaVersion,
