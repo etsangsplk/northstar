@@ -2,6 +2,7 @@ package io.jask.svc.northstar
 
 import java.util.UUID
 
+import akka.Done
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
@@ -11,6 +12,7 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.MarshallingDirectives.{as, entity}
 import akka.http.scaladsl.server.directives.RouteDirectives.complete
 import akka.stream.Materializer
+import akka.stream.scaladsl.{Keep, Sink}
 import io.jask.dto.northstar.{FileUploadStat, JsonSupport}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -72,7 +74,7 @@ class IngestRoutes(ctx: IngestContext,
             }
             case _                                => {
               complete((StatusCodes.BadRequest,
-                        "Must send parts named 'record' and 'extractedFile'"))
+                         "Must send parts named 'record' and 'extractedFile'"))
             }
           }
         }
@@ -83,19 +85,53 @@ class IngestRoutes(ctx: IngestContext,
     }
   }
 
-  lazy val route: Route =
-    (post & (path("log") | path("log" / "cef"))) {
-      recordRoute("log", UUID.randomUUID())
-    } ~
-    (post & (path("user") | path("inventory"))) {
-      recordRoute("entity", UUID.randomUUID())
-    } ~
-    (post & path("bro" / RemainingPath)) { broType =>
-      recordRoute(s"network.${broType.toString()}", UUID.randomUUID())
-    } ~
-    (post & path("file")) {
-      fileRoute(UUID.randomUUID())
+  /** Suck all the request body data off so that we can return a 400
+    *
+    * If you don't actually consume all the request body data, Akka will force-close the
+    * connection and give no useful feedback to the user.
+    */
+  private[this] val defaultRoute: Route = {
+    extractDataBytes { data =>
+      val pipe: Future[Done] = data.toMat(Sink.ignore)(Keep.right).run()
+
+      onComplete(pipe) {
+        case _ =>
+          complete((StatusCodes.BadRequest, "The requested resource could not be found"))
+      }
     }
+  }
+
+  lazy val route: Route =
+    post {
+      val id = UUID.randomUUID()
+
+      (path("log") | path("log" / "cef")) {
+        recordRoute("log", id)
+      } ~
+      (path("user") | path("inventory")) {
+        recordRoute("entity", id)
+      } ~
+      path("bro" / Remaining) { broType =>
+        recordRoute(s"network.${broType}", id)
+      } ~
+      path("file") {
+        fileRoute(id)
+      }
+    } ~
+    put {
+      (path("log" / JavaUUID) | path("log" / "cef" / JavaUUID)) { id =>
+        recordRoute("log", id)
+      } ~
+      (path("user" / JavaUUID) | path("inventory" / JavaUUID)) { id =>
+        recordRoute("entity", id)
+      } ~
+      path("bro" / Segment / JavaUUID) { (broType, id) =>
+        recordRoute(s"network.${broType}", id)
+      } ~
+      path("file" / JavaUUID) { id =>
+        fileRoute(id)
+      }
+    } ~ defaultRoute
 
   def run(): Unit = {
     Http().bindAndHandle(route, "0.0.0.0", 8080)
