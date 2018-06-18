@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import cats.syntax.either._
 import io.circe._
-import io.circe.parser._
+import io.circe.jawn._
 import sun.misc.{Signal, SignalHandler}
 
 class Demux(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends Runnable {
