@@ -10,22 +10,24 @@ lazy val deps = Seq(
   "com.lightbend"      %% "kafka-streams-scala"    % "0.2.1",
   "io.circe"           %% "circe-core"             % circeVersion,
   "io.circe"           %% "circe-jawn"             % circeVersion,
-  "io.circe"           %% "circe-generic"          % circeVersion,
-  "de.heikoseeberger"  %% "akka-http-circe"        % "1.21.0",
-  // Needed by circe
-  "org.scalamacros"   % "paradise"             % "2.1.1" cross CrossVersion.full,
-  "com.typesafe.akka" %% "akka-http-testkit"   % akkaHttpVersion % Test,
-  "com.typesafe.akka" %% "akka-testkit"        % akkaVersion % Test,
-  "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
-  "org.scalatest"     %% "scalatest"           % "3.0.1" % Test,
-  "ch.qos.logback"    % "logback-classic"      % "1.2.3",
-  "org.slf4j"         % "slf4j-api"            % "1.7.25",
-  "org.slf4j"         % "log4j-over-slf4j"     % "1.7.25",
-  "org.slf4j"         % "jul-to-slf4j"         % "1.7.25"
+  "io.circe"           %% "circe-generic"          % circeVersion, // Maybe use -derivation?
+  "de.heikoseeberger"  %% "akka-http-circe"        % "1.21.0", // Needed by circe
+  "org.scalamacros"    % "paradise"                % "2.1.1" cross CrossVersion.full,
+  "com.typesafe.akka"  %% "akka-http-testkit"      % akkaHttpVersion % Test,
+  "com.typesafe.akka"  %% "akka-testkit"           % akkaVersion % Test,
+  "com.typesafe.akka"  %% "akka-stream-testkit"    % akkaVersion % Test,
+  "org.scalatest"      %% "scalatest"              % "3.0.1" % Test,
+  "io.findify"         %% "s3mock"                 % "0.2.4" % "test",
+  "ch.qos.logback"     % "logback-classic"         % "1.2.3",
+  "org.slf4j"          % "slf4j-api"               % "1.7.25",
+  "org.slf4j"          % "log4j-over-slf4j"        % "1.7.25",
+  "org.slf4j"          % "jul-to-slf4j"            % "1.7.25"
 )
+
 lazy val commonSettings = Seq(
   organization := "com.jask",
-  scalaVersion := "2.12.6"
+  scalaVersion := "2.12.6",
+  scalacOptions ++= Seq("-feature")
 )
 
 lazy val common = (project in file("common"))
