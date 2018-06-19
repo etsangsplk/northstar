@@ -1,0 +1,9 @@
+End-to-end testing of Northstar
+
+1. cd ~/northstar # git clone top-level
+2. cp etc/syslog-ng/syslog-ng.conf /usr/local/etc/syslog-ng.conf
+3. syslog-ng -Fevd # in its own terminal window
+4. sbt "http/run" # in its own terminal window
+5. sbt "parse/run" # ditto
+6. http POST localhost:8080/bro/flow < etc/syslog-ng/samples/bc_tagged.log # via HTTPie
+
