@@ -20,11 +20,12 @@ import scala.util.{Failure, Success}
 
 class IngestRoutes(ctx: IngestContext,
                    recordGraphBuilder: RecordGraphBuilder,
-                   fileGraphBuilder: FileGraphBuilder) extends JsonSupport {
-  private[this] implicit val system: ActorSystem      = ctx.system
-  private[this] implicit val ec    : ExecutionContext = ctx.system.dispatcher
-  private[this] implicit val mat   : Materializer     = ctx.materializer
-  private[this] lazy     val log                      = Logging(ctx.system, classOf[IngestRoutes])
+                   fileGraphBuilder: FileGraphBuilder)
+    extends JsonSupport {
+  private[this] implicit val system: ActorSystem  = ctx.system
+  private[this] implicit val ec: ExecutionContext = ctx.system.dispatcher
+  private[this] implicit val mat: Materializer    = ctx.materializer
+  private[this] lazy val log                      = Logging(ctx.system, classOf[IngestRoutes])
 
   private[this] def recordRoute(dataType: String, id: UUID): Route = {
     extractDataBytes { data =>
@@ -34,7 +35,7 @@ class IngestRoutes(ctx: IngestContext,
         case Success(result) => {
           complete(result)
         }
-        case Failure(e)      => {
+        case Failure(e) => {
           failWith(e)
         }
       }
@@ -46,21 +47,24 @@ class IngestRoutes(ctx: IngestContext,
       val graph: Future[FileUploadStat] = formData.parts
         .runFoldAsync(FileUploadStat()) { (stat, part) =>
           part.name match {
-            case "record"        => {
-              val flow = recordGraphBuilder.makeGraph(part.entity.dataBytes, "file", id)
+            case "record" => {
+              val flow =
+                recordGraphBuilder.makeGraph(part.entity.dataBytes, "file", id)
 
               flow.run().map { uploadStat =>
                 stat.copy(uploadStat = Some(uploadStat))
               }
             }
             case "extractedFile" => {
-              val flow = fileGraphBuilder.makeGraph(part.entity.dataBytes, "file", id).run()
+              val flow = fileGraphBuilder
+                .makeGraph(part.entity.dataBytes, "file", id)
+                .run()
 
               flow.map { fileStat =>
                 stat.copy(fileStat = Some(fileStat))
               }
             }
-            case _               => {
+            case _ => {
               part.entity.dataBytes.runFold(stat)((_, _) => stat)
             }
           }
@@ -72,9 +76,9 @@ class IngestRoutes(ctx: IngestContext,
             case FileUploadStat(Some(_), Some(_)) => {
               complete(u)
             }
-            case _                                => {
-              complete((StatusCodes.BadRequest,
-                         "Must send parts named 'record' and 'extractedFile'"))
+            case _ => {
+              complete(
+                (StatusCodes.BadRequest, "Must send parts named 'record' and 'extractedFile'"))
             }
           }
         }
@@ -108,30 +112,30 @@ class IngestRoutes(ctx: IngestContext,
       (path("log") | path("log" / "cef")) {
         recordRoute("log", id)
       } ~
-      (path("user") | path("inventory")) {
-        recordRoute("entity", id)
-      } ~
-      path("bro" / Remaining) { broType =>
-        recordRoute(s"network.${broType}", id)
-      } ~
-      path("file") {
-        fileRoute(id)
-      }
+        (path("user") | path("inventory")) {
+          recordRoute("entity", id)
+        } ~
+        path("bro" / Remaining) { broType =>
+          recordRoute(s"network.${broType}", id)
+        } ~
+        path("file") {
+          fileRoute(id)
+        }
     } ~
-    put {
-      (path("log" / JavaUUID) | path("log" / "cef" / JavaUUID)) { id =>
-        recordRoute("log", id)
-      } ~
-      (path("user" / JavaUUID) | path("inventory" / JavaUUID)) { id =>
-        recordRoute("entity", id)
-      } ~
-      path("bro" / Segment / JavaUUID) { (broType, id) =>
-        recordRoute(s"network.${broType}", id)
-      } ~
-      path("file" / JavaUUID) { id =>
-        fileRoute(id)
-      }
-    } ~ defaultRoute
+      put {
+        (path("log" / JavaUUID) | path("log" / "cef" / JavaUUID)) { id =>
+          recordRoute("log", id)
+        } ~
+          (path("user" / JavaUUID) | path("inventory" / JavaUUID)) { id =>
+            recordRoute("entity", id)
+          } ~
+          path("bro" / Segment / JavaUUID) { (broType, id) =>
+            recordRoute(s"network.${broType}", id)
+          } ~
+          path("file" / JavaUUID) { id =>
+            fileRoute(id)
+          }
+      } ~ defaultRoute
 
   def run(): Unit = {
     Http().bindAndHandle(route, "0.0.0.0", 8080)

@@ -25,21 +25,20 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param ctx Application-wide variables
   */
 class RecordGraphBuilder(ctx: IngestContext) extends GraphBuilder[UploadStat] {
-  private[this] implicit val system: ActorSystem      = ctx.system
-  private[this] implicit val ec    : ExecutionContext = ctx.system.dispatcher
+  private[this] implicit val system: ActorSystem  = ctx.system
+  private[this] implicit val ec: ExecutionContext = ctx.system.dispatcher
 
   /** Graph stage that produces messages to Kafka */
   private[this] val producerFlow =
     Producer.flow[UUID, Array[Byte], UploadStat](ctx.producerSettings, ctx.producer)
 
   /** Graph stage that breaks a byte string into line-delimited messages. */
-  private[this] val framer = Framing.delimiter(ByteString("\n"),
-                                               maximumFrameLength = 100000,
-                                               allowTruncation = true)
+  private[this] val framer =
+    Framing.delimiter(ByteString("\n"), maximumFrameLength = 100000, allowTruncation = true)
 
   /** Graph sink that folds up kafka upload responses into a single UploadStat DTO. */
-  private[this] val uploadStatSink:
-    Sink[ProducerMessage.Result[UUID, Array[Byte], UploadStat], Future[UploadStat]] =
+  private[this] val uploadStatSink: Sink[ProducerMessage.Result[UUID, Array[Byte], UploadStat],
+                                         Future[UploadStat]] =
     Sink.fold(UploadStat()) { (acc, result) =>
       val stat = result.message.passThrough
 
@@ -55,11 +54,10 @@ class RecordGraphBuilder(ctx: IngestContext) extends GraphBuilder[UploadStat] {
     * @param dataType The data type (dictates how the messages are wrapped)
     * @return A graph stage that uploads messages with the given ID and type to kafka.
     */
-  private[this] def messageCreator(id: UUID,
-                                   dataType: String /* TODO! */) = {
+  private[this] def messageCreator(id: UUID, dataType: String /* TODO! */ ) = {
     framer.map { line: ByteString =>
       val stat = UploadStat(count = 1, size = line.size, maxRecord = line.size)
-      val rec = new ProducerRecord(ctx.topic, id, line.toArray)
+      val rec  = new ProducerRecord(ctx.topic, id, line.toArray)
 
       ProducerMessage.Message(rec, stat)
     }

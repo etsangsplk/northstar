@@ -17,12 +17,11 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param ctx Application-wide variables
   */
 class FileGraphBuilder(ctx: IngestContext) extends GraphBuilder[FileStat] {
-  private[this] implicit val system: ActorSystem      = ctx.system
-  private[this] implicit val ec    : ExecutionContext = ctx.system.dispatcher
+  private[this] implicit val system: ActorSystem  = ctx.system
+  private[this] implicit val ec: ExecutionContext = ctx.system.dispatcher
 
   /** A graph sink that simply adds up the bytes to materialize a total size. */
-  private[this] val sizeCounterSink =
-    Sink.fold(0)((acc: Int, rec: ByteString) => acc + rec.size)
+  private[this] val sizeCounterSink = Sink.fold(0)((acc: Int, rec: ByteString) => acc + rec.size)
 
   /** Creates a graph sink that uploads bytes to s3.
     *
@@ -49,11 +48,10 @@ class FileGraphBuilder(ctx: IngestContext) extends GraphBuilder[FileStat] {
   private[this] def combiner(uploadResult: Future[MultipartUploadResult],
                              count: Future[Int]): Future[FileStat] = {
     for {
-      c <- count
+      c  <- count
       ur <- uploadResult
     } yield {
-      FileStat(size = Some(c),
-               path = Some(s"s3://${ur.bucket}/${ur.key}"))
+      FileStat(size = Some(c), path = Some(s"s3://${ur.bucket}/${ur.key}"))
     }
   }
 

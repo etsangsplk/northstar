@@ -23,23 +23,24 @@ class RecordPublisher(config: Config) extends Runnable {
         log.error("Error opening input pipe: ".concat(pipe), e)
         Thread.sleep(1000)
       }
-        null
+      null
     }
   }
+
   /** Execute a Kafka consumer to forever read and demultiplex records keyed by
     * tag to its corresponding named output.
     */
   def run(): Unit = {
-    val props = new Properties()
-    val topic = config.getString("northstar.produce.topic")
-    val pipe = config.getString("northstar.parse.output.pipe")
-    var input:FileInputStream = null
+    val props                  = new Properties()
+    val topic                  = config.getString("northstar.produce.topic")
+    val pipe                   = config.getString("northstar.parse.output.pipe")
+    var input: FileInputStream = null
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-      config.getString("kafka-consumer.bootstrap.servers"))
+              config.getString("kafka-consumer.bootstrap.servers"))
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-      "org.apache.kafka.common.serialization.StringSerializer")
+              "org.apache.kafka.common.serialization.StringSerializer")
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-      "org.apache.kafka.common.serialization.StringSerializer")
+              "org.apache.kafka.common.serialization.StringSerializer")
     // val producer = new KafkaProducer[String, String](props)
     log.info("Record publisher started on topic: ".concat(topic))
     while (true) {
