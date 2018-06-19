@@ -4,10 +4,16 @@ import java.util.{Properties, UUID}
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer}
-import sun.misc.Signal
-import sun.misc.SignalHandler
+import org.slf4j.LoggerFactory
 
 object ParseService {
+  private[this] lazy val log = LoggerFactory.getLogger("ParseService")
+
+  /** Northstar-parse service implements the following core functionality:
+    *   - Consume raw data from Kafka and demultiplex to Syslog-NG via tags
+    *   - Consume mapped data from Syslog-NG, perform fix-ups, convert to Avro
+    *   - Publish final Avro to Kafka on a new topic
+    */
   def main(args: Array[String]) {
     var config: Config = null
     var consumer: KafkaConsumer[UUID, Array[Byte]] = null
@@ -37,11 +43,12 @@ object ParseService {
         config.getString("kafka-consumer.session.timeout.ms"))
       consumer = new KafkaConsumer[UUID, Array[Byte]](props)
 
-      new Thread(new Demux(consumer, config)).start()
+      new Thread(new RawDemuxer(consumer, config)).start()
+      new Thread(new RecordPublisher(config)).start()
+
     } catch {
       case e: Throwable => {
-        println("Shutting down...")
-        e.printStackTrace()
+        log.error("Shutting down...", e)
       }
     }
   }

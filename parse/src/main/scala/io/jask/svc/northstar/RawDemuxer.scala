@@ -14,16 +14,18 @@ import io.circe._
 import io.circe.jawn._
 import sun.misc.{Signal, SignalHandler}
 
-class Demux(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends Runnable {
+class RawDemuxer(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends Runnable {
 
-  private[this] lazy val log = LoggerFactory.getLogger(classOf[Demux])
+  private[this] lazy val log = LoggerFactory.getLogger(classOf[RawDemuxer])
   private[this] var outputs:mutable.Map[String, FileOutputStream] = mutable.Map()
 
+  /** Rebuild outputs map on SIGHUP */
   Signal.handle(new Signal("HUP"), new SignalHandler() {
     def handle(sig: Signal) {
       outputs = buildOutputsMap()
     }
   })
+
   /** Build and return a map of named outputs for parsing demultiplexed
     * raw records from Kafka.
     *
@@ -31,7 +33,7 @@ class Demux(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends 
     */
   def buildOutputsMap(): mutable.Map[String, FileOutputStream] = {
     var outputsMap:mutable.Map[String, FileOutputStream] = mutable.Map()
-    val d = new File(config.getString("northstar.parser.folder"))
+    val d = new File(config.getString("northstar.parse.inputs.folder"))
     if (d.exists && d.isDirectory) {
       for(file <- d.listFiles.toList) {
         try {
@@ -56,7 +58,7 @@ class Demux(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) extends 
     val topic = config.getString("northstar.consume.topic")
     val timeout = config.getInt("northstar.consume.timeout")
     outputs = buildOutputsMap()
-    log.info("Worker started on topic: ".concat(topic))
+    log.info("Raw demux started on topic: ".concat(topic))
     consumer.subscribe(Seq(topic).asJava)
 
     while(true){
