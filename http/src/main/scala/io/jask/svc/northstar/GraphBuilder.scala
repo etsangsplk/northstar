@@ -23,6 +23,7 @@ import scala.concurrent.Future
   * @tparam T Response type
   */
 trait GraphBuilder[T] {
+
   /** Make a graph that handles source bytes
     *
     * @param source   Source bytes from the sensor.

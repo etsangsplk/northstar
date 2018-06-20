@@ -73,6 +73,12 @@ likely require either the help of an external state database or transactional
 Kafka writes, both of which complicate things in a service that aims to be
 simple.
 
+Formatting
+---------------------------
+
+Run `git config core.hooksPath .githooks` from within the repo to have
+scalafmt run as a pre-commit hook.
+
 TODO
 ---------------------------
 1. Basics

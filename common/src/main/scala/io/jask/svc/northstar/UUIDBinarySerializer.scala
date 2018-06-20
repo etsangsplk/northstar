@@ -4,5 +4,4 @@ import java.util.UUID
 
 import com.lightbend.kafka.scala.streams.Serializer
 
-class UUIDBinarySerializer extends Serializer[UUID]
-                           with UUIDBinarySerializerOps {}
+class UUIDBinarySerializer extends Serializer[UUID] with UUIDBinarySerializerOps {}
