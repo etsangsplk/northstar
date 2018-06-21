@@ -11,4 +11,6 @@ trait JsonSupport extends FailFastCirceSupport {
   implicit val fileStatDecoder: Decoder[FileStat]             = deriveDecoder
   implicit val fileUploadStatEncoder: Encoder[FileUploadStat] = deriveEncoder
   implicit val fileUploadStatDecoder: Decoder[FileUploadStat] = deriveDecoder
+  implicit val envelopeDecoder: Decoder[Envelope]             = deriveDecoder
+  implicit val envelopeEncoder: Encoder[Envelope]             = deriveEncoder
 }

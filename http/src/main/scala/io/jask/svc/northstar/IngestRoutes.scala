@@ -33,7 +33,13 @@ class IngestRoutes(ctx: IngestContext,
 
       onComplete(graph) {
         case Success(result) => {
-          complete(result)
+          val code =
+            if (result.goodRecords == 0) {
+              StatusCodes.BadRequest
+            } else {
+              StatusCodes.OK
+            }
+          complete((code, result))
         }
         case Failure(e) => {
           failWith(e)

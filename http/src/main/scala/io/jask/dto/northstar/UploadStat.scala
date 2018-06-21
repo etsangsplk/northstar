@@ -1,6 +1,9 @@
 package io.jask.dto.northstar
 
-case class UploadStat(count: Long = 0,
+import java.util.UUID
+
+case class UploadStat(id: UUID,
+                      goodRecords: Long = 0,
+                      badRecords: Long = 0,
                       size: Long = 0,
-                      failures: Long = 0,
                       maxRecord: Long = Long.MinValue)
