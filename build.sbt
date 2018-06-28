@@ -14,6 +14,7 @@ lazy val deps    = Seq(
       "io.circe"           %% "circe-jawn"             % circeVersion,
       "io.circe"           %% "circe-generic"          % circeVersion,
       "de.heikoseeberger"  %% "akka-http-circe"        % "1.21.0",
+      "com.sksamuel.avro4s" %% "avro4s-core"           % "1.9.0",
 
       // Needed by circe
       "org.scalamacros"     % "paradise"               % "2.1.1" cross CrossVersion.full,
