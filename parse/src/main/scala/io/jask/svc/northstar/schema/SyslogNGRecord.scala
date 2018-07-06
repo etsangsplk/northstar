@@ -21,19 +21,29 @@ case class Source(ip: Option[String], username: Option[String], group: Option[St
                   userAgent: Option[String])
 
 
-case class BlueCoatRecord(event: Option[Event],
-                           destination: Option[Destination],
-                           source: Option[Source],
-                           http: Option[Http]
-                         ) extends AvroSerializable { //TODO add fields from top-level json
+case class SyslogNGRecord(event: Option[Event],
+                          destination: Option[Destination],
+                          source: Option[Source],
+                          http: Option[Http],
+                          TAGS: Option[String],
+                          SOURCEIP: Option[String],
+                          SOURCE: Option[String],
+                          PRIORITY: Option[String],
+                          MESSAGE: Option[String],
+                          HOST_FROM: Option[String],
+                          HOST: Option[String],
+                          FILE_NAME: Option[String],
+                          FACILITY: Option[String],
+                          DATE: Option[String]
+                         ) extends AvroSerializable {
 
   override def dataType: String = {
-    "blueCoatRecord"
+    "logRecord"
   }
 
   override def writeToAvro(os: OutputStream) = {
     def avroStream = {
-      AvroOutputStream.data[BlueCoatRecord](os)
+      AvroOutputStream.data[SyslogNGRecord](os)
     }
     avroStream.write(this)
     avroStream.flush()
@@ -41,12 +51,12 @@ case class BlueCoatRecord(event: Option[Event],
   }
 
   override def convertToGenericRecord(): GenericRecord = {
-    RecordFormat[BlueCoatRecord].to(this)
+    RecordFormat[SyslogNGRecord].to(this)
   }
 }
 
-object BlueCoatRecord {
-  implicit val decode: Decoder[BlueCoatRecord] = deriveDecoder[BlueCoatRecord]
+object SyslogNGRecord {
+  implicit val decode: Decoder[SyslogNGRecord] = deriveDecoder[SyslogNGRecord]
   implicit val decodeDestination: Decoder[Destination] = deriveDecoder[Destination]
   implicit val decodeEvent: Decoder[Event] = deriveDecoder[Event]
   implicit val decodeHttp: Decoder[Http] = deriveDecoder[Http]

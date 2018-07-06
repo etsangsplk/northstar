@@ -76,7 +76,7 @@ class RawDemuxer(consumer: KafkaConsumer[UUID, Array[Byte]], config: Config) ext
                 log.error("Skipping non-JASK JSON record: " + rawJson)
               }
               case Right(tag) => {
-                log.info("Tag is: " + tag)
+                log.debug("Tag is: " + tag)
                 if (outputs.contains(tag)) {
                   cursor.downField("msg").downField("content").as[String]
                   match {
